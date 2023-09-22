@@ -26,7 +26,7 @@ public:
 
         juce::Rectangle<float> dialArea(rx, ry, diameter, diameter);
         g.setColour(juce::Colours::silver);
-        g.fillEllipse(dialArea);     
+        g.fillEllipse(dialArea);
 
         g.setColour(juce::Colours::black);
         g.fillEllipse(centerX - 60, centerY - 60, 120, 120);
@@ -65,94 +65,16 @@ class KnobLookFeel : public juce::LookAndFeel_V4
     }
 };
 
-struct ControlColumn : public juce::Component
-{
-    KnobLookFeel knobLookFeel;
-    ControlColumn()
-    {
-        addAndMakeVisible(&loadButton);
-        addAndMakeVisible(&cueButton);
-        //addAndMakeVisible(&volumeSlider);
-
-        for (int i = 0; i < 5; ++i)
-        {
-            addAndMakeVisible(knobs.add(new juce::Slider));
-            knobs[i]->setSliderStyle(juce::Slider::Rotary);
-            knobs[i]->setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
-        }
-    }
-
-    void resized() override
-    {
-        auto bounds = juce::Rectangle<int>(500, 0, 100, 600);
-        auto knobWidth = bounds.getWidth() / 3;
-        auto knobHeight = knobWidth;
-
-        for (int i = 0; i < 5; ++i)
-        {
-            knobs[i]->setBounds(getWidth() / 3, 65 * i + 40, knobWidth, knobHeight);
-            knobs[i]->setLookAndFeel(&knobLookFeel);
-        }
-
-        loadButton.setBounds(25, 0, 60, 20);
-        loadButton.setButtonText("LOAD");
-
-        cueButton.setBounds(25, getHeight() - 240, 60, 20);
-        cueButton.setButtonText("CUE");
-
-        volumeSlider.setBounds(30, getHeight() - 190, 50, 140);
-        addAndMakeVisible(&volumeSlider);
-        volumeSlider.setSliderStyle(juce::Slider::SliderStyle::LinearBarVertical);
-        volumeSlider.setRange(MIN_VOLDB, MAX_VOLDB);
-        volumeSlider.setValue(-24.0);
-        volumeSlider.setTextBoxStyle(juce::Slider::NoTextBox, true, 0, 0);
-        //volumeSlider.addListener(this);
-    }
-    
-    juce::TextButton loadButton;
-    juce::OwnedArray<juce::Slider> knobs;
-    juce::TextButton cueButton;
-    juce::Slider volumeSlider;
-};
-
-struct CenterColumn : public juce::Component
-{
-    KnobLookFeel knobLookFeel;
-    CenterColumn()
-    {
-        for (int i = 0; i < 3; ++i)
-        {
-            addAndMakeVisible(knobs.add(new juce::Slider));
-            knobs[i]->setSliderStyle(juce::Slider::Rotary);
-            knobs[i]->setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
-            knobs[i]->setLookAndFeel(&knobLookFeel);
-        }
-    }
-
-    void resized() override
-    {
-        auto bounds = juce::Rectangle<int>(500, 0, 100, 400);
-        auto knobWidth = bounds.getWidth() / 3;
-        auto knobHeight = knobWidth;
-
-        knobs[0]->setBounds(getWidth() / 3, 115, knobWidth, knobHeight);
-        knobs[1]->setBounds(getWidth() / 3, 200, knobWidth, knobHeight);
-        knobs[2]->setBounds(getWidth() / 3, 290, knobWidth, knobHeight);
-        
-    }
-
-    juce::OwnedArray<juce::Slider> knobs;
-};
 
 //==============================================================================
 /*
     This component lives inside our window, and this is where you should put all
     your controls and content.
 */
-class MainContentComponent  : public juce::AudioAppComponent,
-                              public juce::ChangeListener,
-                              public juce::Slider::Listener,
-                              public juce::Timer
+class PanelComponent : public juce::AudioAppComponent,
+    public juce::ChangeListener,
+    public juce::Slider::Listener,
+    public juce::Timer
 
 {
 public:
@@ -165,20 +87,20 @@ public:
         Paused,
         Stopping
     };
-    
-    //==============================================================================
-    MainContentComponent();
-    ~MainContentComponent() override;
 
     //==============================================================================
-    void prepareToPlay (int samplesPerBlockExpected, double sampleRate) override;
-    void getNextAudioBlock (const juce::AudioSourceChannelInfo& bufferToFill) override;
+    PanelComponent();
+    ~PanelComponent() override;
+
+    //==============================================================================
+    void prepareToPlay(int samplesPerBlockExpected, double sampleRate) override;
+    void getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill) override;
     void releaseResources() override;
 
     //==============================================================================
-    void paint (juce::Graphics& g) override;
+    void paint(juce::Graphics& g) override;
     void resized() override;
-        //==============================================================================
+    //==============================================================================
 
     void changeListenerCallback(juce::ChangeBroadcaster* source) override;
     void changeState(TransportState newState);
@@ -201,22 +123,17 @@ public:
     void rightButtonClicked();
 
     void sliderValueChanged(juce::Slider* slider) override;
-
-    //taken from AudioTransportSource
-    //bool hasStreamFinished() const noexcept;
-
     void sliderDragEnded(juce::Slider* slider) override;
     void timerCallback() override;
 
-
+    void enablePlayButton();
 
 
 private:
     //==============================================================================
     // Your private member variables go here...
-    
+
     //buttons
-    juce::TextButton loadButton;
     juce::TextButton shiftButton;
     juce::TextButton vinylButton;
     juce::TextButton tempoRangeButton;
@@ -232,12 +149,8 @@ private:
     juce::ShapeButton deckButton1{ "1", juce::Colours::slategrey, juce::Colours::slategrey, juce::Colours::darkred };
     juce::ShapeButton deckButton3{ "3", juce::Colours::slategrey, juce::Colours::slategrey, juce::Colours::darkred };
     juce::ShapeButton slipButton{ "Slip", juce::Colours::slategrey, juce::Colours::slategrey, juce::Colours::darkred };
-    juce::ShapeButton tapButton{ "Tap", juce::Colours::slategrey, juce::Colours::slategrey, juce::Colours::darkred }; 
+    juce::ShapeButton tapButton{ "Tap", juce::Colours::slategrey, juce::Colours::slategrey, juce::Colours::darkred };
     juce::ShapeButton onButton{ "On", juce::Colours::slategrey, juce::Colours::slategrey, juce::Colours::darkred };
-
-    //structs 
-    ControlColumn leftControlColumn;
-    //CenterColumn centerColumn;
 
     //pads 
     struct PadPanel : public juce::Component
@@ -268,13 +181,13 @@ private:
 
             for (int i = 5; i < NUM_PADS; ++i)
             {
-                pads[i]->setBounds((padSize + 10) * (i-4), padSize + 10, padSize, padSize);
+                pads[i]->setBounds((padSize + 10) * (i - 4), padSize + 10, padSize, padSize);
             }
         }
 
         //juce::Colour backgroundColor;
         juce::OwnedArray<juce::TextButton> pads;
-    }; 
+    };
     PadPanel pads; //instantiate
 
     //bottom buttons
@@ -363,13 +276,13 @@ private:
             auto bounds = juce::Rectangle<int>(100, 0, 340, 150);
             auto knobWidth = bounds.getWidth() / 4 - 50;
             auto knobHeight = bounds.getHeight() / 2;
-            
+
             for (int i = 0; i < 4; ++i)
             {
                 knobs[i]->setBounds(15 + 71 * i, -15, knobWidth, knobHeight);
                 knobs[i]->setLookAndFeel(&knobLookFeel);
             }
-            
+
             auto buttonWidth = bounds.getWidth() / 4 - 23;
             auto buttonHeight = 20;
 
@@ -385,11 +298,6 @@ private:
         juce::OwnedArray<juce::TextButton> buttons;
     };
     FXKnobsAndButtons knobsAndButtons;
-
-    //columns 
-    //ControlColumn leftControlColumn;
-
-    //
 
 
     //sliders
@@ -430,7 +338,7 @@ private:
     juce::MixerAudioSource mixerSource;
     juce::AudioSourcePlayer sourcePlayer;
     juce::ResamplingAudioSource* stashSource;
-    
+
     int samplesPerBlock;
     juce::int64 prevLength;
     juce::int64 newPos;
@@ -448,5 +356,5 @@ private:
     bool wheelEngaged;
 
     ///////////////////////////////////////////////////////////////////////
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainContentComponent)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PanelComponent)
 };

@@ -1,25 +1,13 @@
-#include "MainComponent.h"
+#pragma once 
 
+#include "PanelComponent.h"
 
-//==============================================================================
-MainContentComponent::MainContentComponent() : state (Stopped)
+PanelComponent::PanelComponent()
 {
-   
-
-    //load button
-    /*addAndMakeVisible(&loadButton);
-    loadButton.setBounds(350, 10, 60, 20);
-    loadButton.setButtonText("LOAD");
-    loadButton.onClick = [this] { loadButtonClicked(); };
-    loadButton.setColour(juce::TextButton::buttonColourId, juce::Colours::black);*/
-
-    //left column load button
-    leftControlColumn.loadButton.onClick = [this] {loadButtonClicked(); };
-
     //shift button 
     addAndMakeVisible(&shiftButton);
     shiftButton.setBounds(10, getHeight() - 255, 40, 20);
-    shiftButton.setButtonText("SHIFT");  
+    shiftButton.setButtonText("SHIFT");
     shiftButton.onClick = [this] {shiftButtonClicked(); };
 
     //vinyl (jog mode) button
@@ -99,7 +87,6 @@ MainContentComponent::MainContentComponent() : state (Stopped)
     leftButton.onClick = [this] {leftButtonClicked(); };
     leftButton.setColour(juce::TextButton::buttonColourId, juce::Colours::darkslategrey);
 
-
     //tempo range button 
     addAndMakeVisible(&tempoRangeButton);
     tempoRangeButton.setBounds(350, 250, 40, 20);
@@ -107,17 +94,15 @@ MainContentComponent::MainContentComponent() : state (Stopped)
     tempoRangeButton.onClick = [this] { tempoRangeClicked(); };
     tempoRangeButton.setColour(juce::TextButton::buttonColourId, juce::Colours::darkslategrey);
 
-
     //tempo slider 
     addAndMakeVisible(tempoSlider);
     tempoSlider.setSliderStyle(juce::Slider::SliderStyle::LinearBarVertical);
     tempoSlider.setRange(MIN_TEMPO, MAX_TEMPO);
     tempoSlider.setValue(1.0);
-    tempoSlider.setTextBoxStyle(juce::Slider::NoTextBox, true, 0, 0 );
+    tempoSlider.setTextBoxStyle(juce::Slider::NoTextBox, true, 0, 0);
     tempoSlider.addListener(this);
 
     //volume slider 
-    leftControlColumn.volumeSlider.addListener(this);
     /*addAndMakeVisible(volumeSlider);
     volumeSlider.setSliderStyle(juce::Slider::SliderStyle::LinearBarVertical);
     volumeSlider.setRange(MIN_VOLDB, MAX_VOLDB);
@@ -146,12 +131,6 @@ MainContentComponent::MainContentComponent() : state (Stopped)
     //FX knobs and buttons (top) 
     addAndMakeVisible(knobsAndButtons);
 
-    //column of knobs
-    addAndMakeVisible(leftControlColumn);
-
-    //center column 
-    //addAndMakeVisible(centerColumn);
-
     //manage labels 
     addAndMakeVisible(yayLabel);
     yayLabel.setText("PLAY/PAUSE", juce::dontSendNotification);
@@ -173,33 +152,21 @@ MainContentComponent::MainContentComponent() : state (Stopped)
     tempoLabel.attachToComponent(&tempoSlider, false);
     tempoSlider.addListener(this);
 
-    /*addAndMakeVisible(ratioLabel);
-    ratioLabel.setBounds(500, 300, 80, 40);
-    ratioLabel.setText("1.0", juce::dontSendNotification);
-
-    addAndMakeVisible(wheelLabel);
-    wheelLabel.setBounds(500, 100, 80, 40);
-    wheelLabel.setText("0.0", juce::dontSendNotification);
-
-    addAndMakeVisible(deltaLabel);
-    deltaLabel.setBounds(500, 200, 80, 40);
-    deltaLabel.setText("0.0", juce::dontSendNotification);*/
-
     //addAndMakeVisible(timeLabel);
     timeLabel.setBounds(217, 280, 80, 40);
     timeLabel.setText("00:00:000", juce::dontSendNotification);
-    
+
     //primitives 
     tempo = 1.0;
     blockCount = 0;
-    
+
     //resampling
     juce::ResamplingAudioSource resampler(&mixerSource, false, 2);
     stashSource = &resampler;
 
     //prepare main component
-    formatManager.registerBasicFormats();      
-    transportSource.addChangeListener(this);  
+    formatManager.registerBasicFormats();
+    transportSource.addChangeListener(this);
 
     //basic settings
     setAudioChannels(2, 2);
@@ -209,40 +176,44 @@ MainContentComponent::MainContentComponent() : state (Stopped)
     startTimer(17);
 }
 
-MainContentComponent::~MainContentComponent() 
+
+PanelComponent::~PanelComponent()
 {
     // This shuts down the audio device and clears the audio source.
     shutdownAudio();
 }
 
+void PanelComponent::enablePlayButton()
+{
+    playButton.setEnabled(true);
+}
 ///////////////////////////////////////////////////////////////////////////////////////
-void MainContentComponent::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
+void PanelComponent::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
 {
     stashSource->prepareToPlay(samplesPerBlockExpected, sampleRate);
-    samplesPerBlock = samplesPerBlockExpected;   
+    samplesPerBlock = samplesPerBlockExpected;
 }
 
-void MainContentComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& info)
+void PanelComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& info)
 {
     if (readerSource.get() == nullptr)
     {
         info.clearActiveBufferRegion();
         return;
     }
- 
+
     transportSource.getNextAudioBlock(info);
     currentPos = transportSource.getCurrentPosition();
     blockCount++;
 }
 
-void MainContentComponent::releaseResources()
+void PanelComponent::releaseResources()
 {
     mixerSource.releaseResources();
 }
 
-void MainContentComponent::resized()
+void PanelComponent::resized()
 {
-    //loadButton.setBounds(547, 10, 60, 20);
     shiftButton.setBounds(10, getHeight() - 285, 50, 20);
     playButton.setBounds(10, getHeight() - 80, 65, 65);
     cueButton.setBounds(10, getHeight() - 165, 65, 65);
@@ -255,12 +226,9 @@ void MainContentComponent::resized()
     tempoRangeButton.setBounds(460, 250, 40, 20);
     autoLoopButton.setBounds(430, 500, 70, 20);
     halfXButton.setBounds(430, 540, 25, 20);
-    twoXButton.setBounds(475, 540, 25, 20); 
+    twoXButton.setBounds(475, 540, 25, 20);
     rightButton.setBounds(475, 650, 25, 20);
     leftButton.setBounds(430, 650, 25, 20);
-    leftControlColumn.setBounds(520, 10, 120, 600);
-    //centerColumn.setBounds(620, 20, 150, 400);
-
     tempoSlider.setBounds(455, 30, 50, 140);
     //volumeSlider.setBounds(550, 400, 50, 140);
     wheelSlider.setBounds(90, 135, 335, 335);
@@ -268,10 +236,9 @@ void MainContentComponent::resized()
     bottomButtons.setBounds(120, 500, 300, 20);
     fx1Buttons.setBounds(20, 25, 80, 20);
     knobsAndButtons.setBounds(120, 20, 280, 150);
-    
 }
 
-void MainContentComponent::changeListenerCallback(juce::ChangeBroadcaster* source) 
+void PanelComponent::changeListenerCallback(juce::ChangeBroadcaster* source)
 {
     if (source == &transportSource)
     {
@@ -284,22 +251,22 @@ void MainContentComponent::changeListenerCallback(juce::ChangeBroadcaster* sourc
     }
 }
 
-void MainContentComponent::changeState(TransportState newState)
+void PanelComponent::changeState(TransportState newState)
 {
     if (state != newState)
     {
         state = newState;
         switch (state)
         {
-        case Stopped:                           
+        case Stopped:
             transportSource.setPosition(0.0);
             break;
 
-        case Starting:                          
+        case Starting:
             transportSource.start();
             break;
 
-        case Playing: 
+        case Playing:
             break;
 
         case Pausing:
@@ -309,43 +276,43 @@ void MainContentComponent::changeState(TransportState newState)
         case Paused:
             break;
 
-        case Stopping:                          
+        case Stopping:
             transportSource.stop();
             break;
         }
     }
 }
 
-void MainContentComponent::loadButtonClicked()
+void PanelComponent::loadButtonClicked()
 {
     chooser = std::make_unique<juce::FileChooser>("Select a Wave file to play...",
         juce::File{},
-        "*.wav");                     
+        "*.wav");
     auto chooserFlags = juce::FileBrowserComponent::openMode
         | juce::FileBrowserComponent::canSelectFiles;
 
-    chooser->launchAsync(chooserFlags, [this](const juce::FileChooser& fc)    
+    chooser->launchAsync(chooserFlags, [this](const juce::FileChooser& fc)
         {
             file = fc.getResult();
 
-            if (file != juce::File{})                                               
+            if (file != juce::File{})
             {
-                reader = formatManager.createReaderFor(file);                 
+                reader = formatManager.createReaderFor(file);
 
                 if (reader != nullptr)
                 {
-                    newSource = std::make_unique<juce::AudioFormatReaderSource>(reader, false);                                          
+                    newSource = std::make_unique<juce::AudioFormatReaderSource>(reader, false);
                     transportSource.setSource(newSource.get(), 0, nullptr, reader->sampleRate);
                     mixerSource.addInputSource(&transportSource, false);
 
-                    playButton.setEnabled(true);                                                      
-                    readerSource.reset(newSource.release());       
+                    playButton.setEnabled(true);
+                    readerSource.reset(newSource.release());
                 }
             }
         });
 }
 
-void MainContentComponent::playButtonClicked()
+void PanelComponent::playButtonClicked()
 {
     if ((state == Stopped) || (state == Paused))
         changeState(Starting);
@@ -353,7 +320,7 @@ void MainContentComponent::playButtonClicked()
         changeState(Pausing);
 }
 
-void MainContentComponent::cueButtonClicked()
+void PanelComponent::cueButtonClicked()
 {
     if (state == Paused)
         changeState(Stopped);
@@ -361,49 +328,49 @@ void MainContentComponent::cueButtonClicked()
         changeState(Stopping);
 }
 
-void MainContentComponent::syncButtonClicked()
+void PanelComponent::syncButtonClicked()
 {}
 
-void MainContentComponent::shiftButtonClicked()
+void PanelComponent::shiftButtonClicked()
 {}
 
-void MainContentComponent::deckButton1Clicked()
+void PanelComponent::deckButton1Clicked()
 {}
 
-void MainContentComponent::deckButton3Clicked()
+void PanelComponent::deckButton3Clicked()
 {}
 
-void MainContentComponent::vinylButtonClicked()
+void PanelComponent::vinylButtonClicked()
 {}
 
-void MainContentComponent::slipButtonClicked()
+void PanelComponent::slipButtonClicked()
 {}
 
-void MainContentComponent::tapButtonClicked()
+void PanelComponent::tapButtonClicked()
 {}
 
-void MainContentComponent::onButtonClicked()
+void PanelComponent::onButtonClicked()
 {}
 
-void MainContentComponent::tempoRangeClicked()
+void PanelComponent::tempoRangeClicked()
 {}
 
-void MainContentComponent::autoLoopClicked()
+void PanelComponent::autoLoopClicked()
 {}
 
-void MainContentComponent::halfXButtonClicked()
+void PanelComponent::halfXButtonClicked()
 {}
 
-void MainContentComponent::twoXButtonClicked()
+void PanelComponent::twoXButtonClicked()
 {}
 
-void MainContentComponent::leftButtonClicked()
+void PanelComponent::leftButtonClicked()
 {}
 
-void MainContentComponent::rightButtonClicked()
+void PanelComponent::rightButtonClicked()
 {}
 
-void MainContentComponent::sliderValueChanged(juce::Slider* slider)
+void PanelComponent::sliderValueChanged(juce::Slider* slider)
 {
     if (slider == &tempoSlider)
     {
@@ -449,7 +416,7 @@ void MainContentComponent::sliderValueChanged(juce::Slider* slider)
         }
     }
 
-    if (slider == &leftControlColumn.volumeSlider)
+    /*if (slider == &volumeSlider)
     {
         volDB = slider->getValue();
 
@@ -459,7 +426,7 @@ void MainContentComponent::sliderValueChanged(juce::Slider* slider)
             volume = pow(10, volDB / 20);
 
         transportSource.setGain(volume);
-    }
+    }*/
 
     if (slider == &wheelSlider)
     {
@@ -468,8 +435,8 @@ void MainContentComponent::sliderValueChanged(juce::Slider* slider)
 
         wheelAngle = slider->getValue();
         juce::String rsString = std::to_string(wheelAngle);
-        wheelLabel.setText(rsString, juce::dontSendNotification);        
-         
+        wheelLabel.setText(rsString, juce::dontSendNotification);
+
         double deltaAngle = wheelAngle - prevAngle;
 
         //handle special case of crossing from 10.0 to 0.0 or vice-versa
@@ -491,17 +458,17 @@ void MainContentComponent::sliderValueChanged(juce::Slider* slider)
     }
 }
 
-void MainContentComponent::sliderDragEnded(juce::Slider* slider)
+void PanelComponent::sliderDragEnded(juce::Slider* slider)
 {
     if (wheelEngaged)
-    {   
+    {
         transportSource.start();
     }
     wheelEngaged = false;
 }
 
 
-void MainContentComponent::timerCallback() 
+void PanelComponent::timerCallback()
 {
     juce::RelativeTime position(transportSource.getCurrentPosition());
 
@@ -521,20 +488,12 @@ void MainContentComponent::timerCallback()
 
 
 //==============================================================================
-void MainContentComponent::paint (juce::Graphics& g)
+void PanelComponent::paint(juce::Graphics& g)
 {
-    g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
+    g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
 
     g.setColour(juce::Colours::whitesmoke);
     g.drawRoundedRectangle(16, 270, 44, 105, 5, 1); //deck buttons
     g.drawRoundedRectangle(15, 10, 85, 55, 5, 1);
     g.drawRoundedRectangle(456, 355, 44, 105, 5, 1);
-
-    //g.setColour(juce::Colours::darkgreen);
-    //g.drawEllipse(40, getHeight() - 100, 60, 60, 60);
-    //juce::Path yayPath;
-    
-    //g.fillPath(yayPath);
 }
-
-
